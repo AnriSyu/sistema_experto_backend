@@ -1,7 +1,9 @@
 package com.fet.component;
 
+import com.fet.model.Metric;
 import com.fet.model.Rule;
 import com.fet.model.Student;
+import com.fet.repository.MetricRepository;
 import com.fet.repository.RuleRepository;
 import com.fet.repository.StudentRepository;
 import org.springframework.boot.CommandLineRunner;
@@ -12,72 +14,87 @@ public class DataLoader implements CommandLineRunner {
 
     private final RuleRepository ruleRepository;
     private final StudentRepository studentRepository;
+    private final MetricRepository metricRepository;
 
-    public DataLoader(RuleRepository ruleRepository, StudentRepository studentRepository) {
+    public DataLoader(RuleRepository ruleRepository, StudentRepository studentRepository, MetricRepository metricRepository) {
         this.ruleRepository = ruleRepository;
         this.studentRepository = studentRepository;
+        this.metricRepository = metricRepository;
     }
 
     @Override
     public void run(String... args) throws Exception {
 
         if (ruleRepository.count() == 0) {
-            Rule r1 = new Rule();
-            r1.setCondition("errors>=3");
-            r1.setDifficulty("Persistente");
-            r1.setRecommendation("Repaso guiado con tutor y ejercicios de pseudocódigo.");
+
+            Rule r1 = new Rule("syntaxLogicErrors", "Persistente", "Repaso guiado con tutor y ejercicios de pseudocódigo.");
+            Rule r2 = new Rule("activityMotivation", "Persistente", "Generar alerta de baja motivación y sesión de orientación.");
+            Rule r3 = new Rule("resolutionTime", "Persistente", "Recomendar ejercicios de pseudocódigo o diagramas de flujo.");
+            Rule r4 = new Rule("progressBetweenAttempts", "Leve", "Mantener seguimiento normal.");
+            Rule r5 = new Rule("experimentationPattern", "Leve", "Aprendizaje activo, sin intervención inmediata.");
+            Rule r6 = new Rule("practiceVsTheory", "Leve", "Reforzar lectura conceptual y evaluación escrita.");
+            Rule r7 = new Rule("evaluationAnxiety", "Leve", "Evaluación alternativa sin límite de tiempo y apoyo emocional.");
+            Rule r8 = new Rule("noProgress", "Crítica", "Derivar a apoyo psicopedagógico.");
+
             ruleRepository.save(r1);
-
-            Rule r2 = new Rule();
-            r2.setCondition("not_completed>50%");
-            r2.setDifficulty("Persistente");
-            r2.setRecommendation("Generar alerta de baja motivación y sesión de orientación.");
             ruleRepository.save(r2);
-
-            Rule r3 = new Rule();
-            r3.setCondition("timeSpent>200%");
-            r3.setDifficulty("Persistente");
-            r3.setRecommendation("Recomendar ejercicios de pseudocódigo o diagramas de flujo.");
             ruleRepository.save(r3);
-
-            Rule r4 = new Rule();
-            r4.setCondition("progressive_improvement");
-            r4.setDifficulty("Leve");
-            r4.setRecommendation("Mantener seguimiento normal.");
             ruleRepository.save(r4);
-
-            Rule r5 = new Rule();
-            r5.setCondition("high_attempts_distinct_errors");
-            r5.setDifficulty("Leve");
-            r5.setRecommendation("Aprendizaje activo, sin intervención inmediata.");
             ruleRepository.save(r5);
-
-            Rule r6 = new Rule();
-            r6.setCondition("good_practical_low_theory");
-            r6.setDifficulty("Leve");
-            r6.setRecommendation("Reforzar lectura conceptual y evaluación escrita.");
             ruleRepository.save(r6);
-
-            Rule r7 = new Rule();
-            r7.setCondition("theory_but_anxiety");
-            r7.setDifficulty("Leve");
-            r7.setRecommendation("Evaluación alternativa sin límite de tiempo y apoyo emocional.");
             ruleRepository.save(r7);
-
-            Rule r8 = new Rule();
-            r8.setCondition("no_progress_3_weeks");
-            r8.setDifficulty("Crítica");
-            r8.setRecommendation("Derivar a apoyo psicopedagógico.");
             ruleRepository.save(r8);
         }
 
         if (studentRepository.count() == 0) {
-            Student s = new Student();
-            s.setName("Juan Pérez");
-            s.setEmail("juan@correo.com");
-            studentRepository.save(s);
+            Student s1 = new Student();
+            s1.setName("Juan Pérez");
+            s1.setEmail("juan@correo.com");
+            studentRepository.save(s1);
+
+            Student s2 = new Student();
+            s2.setName("María Gómez");
+            s2.setEmail("maria@correo.com");
+            studentRepository.save(s2);
+
+            Student s3 = new Student();
+            s3.setName("Carlos López");
+            s3.setEmail("carlos@correo.com");
+            studentRepository.save(s3);
+
+            // Crear métricas simuladas con "yes"/"no"
+            Metric m1 = new Metric();
+            m1.setStudent(s1);
+            m1.setExerciseNumber(1);
+            m1.setAnswer("no");
+            metricRepository.save(m1);
+
+            Metric m2 = new Metric();
+            m2.setStudent(s2);
+            m2.setExerciseNumber(1);
+            m2.setAnswer("yes");
+            metricRepository.save(m2);
+
+            Metric m3 = new Metric();
+            m3.setStudent(s3);
+            m3.setExerciseNumber(1);
+            m3.setAnswer("no");
+            metricRepository.save(m3);
+
+            // Métricas adicionales para casos frontera
+            Metric m4 = new Metric();
+            m4.setStudent(s2);
+            m4.setExerciseNumber(2);
+            m4.setAnswer("no");
+            metricRepository.save(m4);
+
+            Metric m5 = new Metric();
+            m5.setStudent(s3);
+            m5.setExerciseNumber(2);
+            m5.setAnswer("yes");
+            metricRepository.save(m5);
         }
 
-        System.out.println("Setup inicial completado: reglas y estudiante cargados.");
+        System.out.println("Setup inicial completado: reglas, estudiantes y métricas cargados, incluyendo casos frontera.");
     }
 }

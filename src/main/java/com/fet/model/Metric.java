@@ -19,9 +19,7 @@ public class Metric {
     @JsonBackReference
     private Student student;
 
-
     private int exerciseNumber;
-    private int errors;
-    private double timeSpent;
-    private int attempts;
+
+    private String answer;
 }

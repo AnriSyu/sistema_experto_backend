@@ -7,13 +7,19 @@ import lombok.*;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@RequiredArgsConstructor
 public class Rule {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NonNull
     private String condition;
+
+    @NonNull
     private String difficulty;
+
+    @NonNull
     private String recommendation;
 }

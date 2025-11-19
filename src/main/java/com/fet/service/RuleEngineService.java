@@ -9,7 +9,9 @@ import com.fet.repository.RuleRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class RuleEngineService {
@@ -23,25 +25,56 @@ public class RuleEngineService {
         this.ruleRepository = ruleRepository;
     }
 
-    public DiagnosisResult evaluate(Student student, List<Metric> metrics) {
-        DiagnosisResult result = new DiagnosisResult();
-        result.setStudent(student);
-        result.setDate(LocalDateTime.now());
-
+    public List<DiagnosisResult> evaluateAll(Student student, List<Metric> metrics) {
         List<Rule> rules = ruleRepository.findAll();
 
-        for (Rule rule : rules) {
-            if (rule.getCondition().equals("errors>=3")) {
-                boolean match = metrics.stream().anyMatch(m -> m.getErrors() >= 3);
-                if (match) {
-                    result.setDifficultyLevel(rule.getDifficulty());
-                    result.setRecommendation(rule.getRecommendation());
-                    break;
-                }
-            }
-        }
+        return rules.stream()
+                .map(rule -> {
+                    int exerciseNumber = mapRuleToExercise(rule.getCondition());
+                    String expectedAnswer = expectedAnswerForRule(rule.getCondition()); // "yes" o "no"
 
-        diagnosisRepository.save(result);
-        return result;
+                    Metric metric = metrics.stream()
+                            .filter(m -> m.getExerciseNumber() == exerciseNumber)
+                            .findFirst()
+                            .orElse(null);
+
+                    if (metric != null && expectedAnswer.equalsIgnoreCase(metric.getAnswer())) {
+                        DiagnosisResult dr = new DiagnosisResult();
+                        dr.setStudent(student);
+                        dr.setDate(LocalDateTime.now());
+                        dr.setDifficultyLevel(rule.getDifficulty());
+                        dr.setRecommendation(rule.getRecommendation());
+                        diagnosisRepository.save(dr);
+                        return dr;
+                    }
+                    return null;
+                })
+                .filter(Objects::nonNull)
+                .toList();
     }
+
+    private String expectedAnswerForRule(String condition) {
+        return switch (condition) {
+            case "progressBetweenAttempts" -> "no"; // solo esta regla espera "no"
+            default -> "yes"; // todas las demás esperan "yes"
+        };
+    }
+
+
+
+    private int mapRuleToExercise(String condition) {
+        return switch (condition) {
+            case "syntaxLogicErrors" -> 1;
+            case "activityMotivation" -> 2;
+            case "resolutionTime" -> 3;
+            case "progressBetweenAttempts" -> 4;
+            case "experimentationPattern" -> 5;
+            case "practiceVsTheory" -> 6;
+            case "evaluationAnxiety" -> 7;
+            case "noProgress" -> 8;
+            default -> 0;
+        };
+    }
+
+
 }

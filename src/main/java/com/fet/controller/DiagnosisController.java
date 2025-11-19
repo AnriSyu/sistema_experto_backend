@@ -10,7 +10,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
+@CrossOrigin(origins = "http://localhost:4200")
 @RestController
 @RequestMapping("/api")
 public class DiagnosisController {
@@ -37,20 +39,33 @@ public class DiagnosisController {
 
 
     @PostMapping("/students/{id}/metrics")
-    public ResponseEntity<DiagnosisResult> submitMetrics(
+    public ResponseEntity<List<DiagnosisResult>> submitMetrics(
             @PathVariable Long id,
-            @RequestBody List<Metric> metrics) {
+            @RequestBody Map<String, Object> payload) {
 
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Estudiante no encontrado"));
 
-        metrics.forEach(m -> m.setStudent(student));
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> answers = (List<Map<String, Object>>) payload.get("answers");
+
+        List<Metric> metrics = answers.stream().map(a -> {
+            Metric m = new Metric();
+            m.setExerciseNumber((int) a.get("exerciseNumber"));
+            m.setAnswer((String) a.get("answer"));
+            m.setStudent(student);
+            return m;
+        }).toList();
+
         metricRepository.saveAll(metrics);
 
-        DiagnosisResult result = ruleEngineService.evaluate(student, metrics);
+        List<DiagnosisResult> results = ruleEngineService.evaluateAll(student, metrics);
 
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(results);
     }
+
+
+
 
     @GetMapping("/students/{id}/diagnoses")
     public ResponseEntity<List<DiagnosisResult>> getDiagnoses(@PathVariable Long id) {
